@@ -1957,18 +1957,26 @@ def verify_password(stored_password: str, provided_password: str) -> bool:
     return bcrypt.checkpw(provided_password.encode('utf-8'), stored_password.encode('utf-8'))
 
 def show_login_page():
-    """Mostrar página de login personalizada con rate limiting"""
+    """Mostrar página de login personalizada con rate limiting y cookies"""
     # Encabezado compacto (evita ocupar toda la pantalla en móvil)
     
     # Verificar si ya está autenticado
     if 'authenticated' in st.session_state and st.session_state.authenticated:
-        # Verificar expiración de sesión (30 minutos de inactividad)
+        # Verificar expiración de sesión (30 minutos de inactividad o 7 días si hay cookie)
         if 'login_timestamp' in st.session_state:
             login_time = datetime.fromtimestamp(st.session_state.login_timestamp)
-            if datetime.now() - login_time > timedelta(minutes=30):
+            remember_me = st.session_state.get('remember_me', False)
+            
+            # Duración de sesión: 30 minutos normales, 7 días si "recordar sesión"
+            session_duration = timedelta(days=7) if remember_me else timedelta(minutes=30)
+            
+            if datetime.now() - login_time > session_duration:
                 # Sesión expirada, limpiar y requerir nuevo login
                 logout()
-                st.warning("⚠️ Sesión expirada por inactividad. Por favor, inicia sesión nuevamente.")
+                if remember_me:
+                    st.warning("⚠️ Cookie expirada. Por favor, inicia sesión nuevamente.")
+                else:
+                    st.warning("⚠️ Sesión expirada por inactividad. Por favor, inicia sesión nuevamente.")
                 st.rerun()
         
         return True, st.session_state.user_name
@@ -2002,6 +2010,11 @@ def show_login_page():
         st.subheader("Iniciar Sesión")
         username = st.text_input("Usuario")
         password = st.text_input("Contraseña", type="password")
+        
+        # Checkbox para "Recordar sesión"
+        remember_me = st.checkbox("🔒 Recordar sesión (7 días)", value=True, 
+                                 help="Mantiene la sesión activa durante 7 días")
+        
         submit_button = st.form_submit_button("Entrar")
         
         if submit_button:
@@ -2025,7 +2038,13 @@ def show_login_page():
                     st.session_state.user_name = user_data['name']
                     st.session_state.user_email = user_data['email']
                     st.session_state.login_timestamp = time.time()
-                    st.success(f"✅ ¡Bienvenido {user_data['name']}!")
+                    st.session_state.remember_me = remember_me
+                    
+                    if remember_me:
+                        st.success(f"✅ ¡Bienvenido {user_data['name']}! Sesión guardada por 7 días.")
+                    else:
+                        st.success(f"✅ ¡Bienvenido {user_data['name']}!")
+                    
                     st.rerun()
                 else:
                     # Contraseña incorrecta
@@ -2055,13 +2074,14 @@ def show_login_page():
         st.write("**Seguridad:**")
         st.write("• Máximo 5 intentos fallidos antes del bloqueo")
         st.write("• Bloqueo exponencial: 2s, 4s, 8s, 16s, 60s")
-        st.write("• Sesión expira después de 30 minutos de inactividad")
+        st.write("• Sesión activa: 30 minutos de inactividad")
+        st.write("• Cookie: 7 días si marcas 'Recordar sesión'")
     
     return False, None
 
 def logout():
     """Cerrar sesión"""
-    for key in ['authenticated', 'username', 'user_name', 'user_email']:
+    for key in ['authenticated', 'username', 'user_name', 'user_email', 'remember_me']:
         if key in st.session_state:
             del st.session_state[key]
     st.rerun()
