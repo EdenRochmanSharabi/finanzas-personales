@@ -1,0 +1,15 @@
+# Archivo de configuración de ejemplo para Finanzas Personales
+# Copia este archivo como config.yaml y personaliza con tus datos
+
+credentials:
+  usernames:
+    usuario_ejemplo:
+      email: tu_email@ejemplo.com
+      name: Tu Nombre Completo
+      password: $2b$12$ejemplo_hash_password_aqui
+
+# Configuración adicional de la aplicación
+app_config:
+  objetivo_ahorro_mensual: 1000.0
+  moneda: "EUR"
+  zona_horaria: "Europe/Madrid"
