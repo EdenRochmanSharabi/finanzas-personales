@@ -2780,14 +2780,21 @@ def render_ingresos_tab(app: FinanzasApp, sel_month: date):
                 fuente = st.text_input("📤 Fuente")
             
             with col2:
-                bruto = st.number_input("💰 Bruto (solo informativo)", min_value=0.0, step=0.01, help="Importe bruto antes de impuestos y retenciones")
-                neto = st.number_input("💎 Neto (modifica balance)", min_value=0.0, step=0.01, help="Importe neto que realmente ingresa a la cuenta")
+                bruto = st.number_input("💰 Bruto (solo informativo)", min_value=0.0, step=0.01, value=0.0, help="Importe bruto antes de impuestos y retenciones")
+                # Campo neto con valor por defecto
+                neto = st.number_input("💎 Neto (modifica balance)", min_value=0.0, step=0.01, value=0.0, help="Importe neto que realmente ingresa a la cuenta")
             
             # Información adicional
             st.info("💡 **Nota**: Solo el importe neto modifica el balance de la cuenta. Los ingresos con fecha futura no afectan el saldo hasta esa fecha.")
             
             if st.form_submit_button("💾 Agregar ingreso"):
-                if app.add_ingreso(fecha, cuenta, descripcion, fuente, bruto, neto):
+                # Asegurar que los valores son float
+                bruto_float = float(bruto) if bruto is not None else 0.0
+                neto_float = float(neto) if neto is not None else 0.0
+                
+                if neto_float <= 0:
+                    st.error("❌ El importe neto debe ser mayor que 0")
+                elif app.add_ingreso(fecha, cuenta, descripcion, fuente, bruto_float, neto_float):
                     st.success("✅ Ingreso agregado correctamente")
                     st.rerun()
 
