@@ -1967,8 +1967,8 @@ def show_login_page():
             login_time = datetime.fromtimestamp(st.session_state.login_timestamp)
             remember_me = st.session_state.get('remember_me', False)
             
-            # Duración de sesión: 30 minutos normales, 7 días si "recordar sesión"
-            session_duration = timedelta(days=7) if remember_me else timedelta(minutes=30)
+            # Duración de sesión: 30 minutos normales, 30 días si "recordar sesión"
+            session_duration = timedelta(days=30) if remember_me else timedelta(minutes=30)
             
             if datetime.now() - login_time > session_duration:
                 # Sesión expirada, limpiar y requerir nuevo login
@@ -2012,8 +2012,8 @@ def show_login_page():
         password = st.text_input("Contraseña", type="password")
         
         # Checkbox para "Recordar sesión"
-        remember_me = st.checkbox("🔒 Recordar sesión (7 días)", value=True, 
-                                 help="Mantiene la sesión activa durante 7 días")
+        remember_me = st.checkbox("🔒 Recordar sesión (30 días)", value=True, 
+                                 help="Mantiene la sesión activa durante 30 días")
         
         submit_button = st.form_submit_button("Entrar")
         
@@ -2041,7 +2041,7 @@ def show_login_page():
                     st.session_state.remember_me = remember_me
                     
                     if remember_me:
-                        st.success(f"✅ ¡Bienvenido {user_data['name']}! Sesión guardada por 7 días.")
+                        st.success(f"✅ ¡Bienvenido {user_data['name']}! Sesión guardada por 30 días.")
                     else:
                         st.success(f"✅ ¡Bienvenido {user_data['name']}!")
                     
@@ -2075,7 +2075,7 @@ def show_login_page():
         st.write("• Máximo 5 intentos fallidos antes del bloqueo")
         st.write("• Bloqueo exponencial: 2s, 4s, 8s, 16s, 60s")
         st.write("• Sesión activa: 30 minutos de inactividad")
-        st.write("• Cookie: 7 días si marcas 'Recordar sesión'")
+        st.write("• Cookie: 30 días si marcas 'Recordar sesión'")
     
     return False, None
 
