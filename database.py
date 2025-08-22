@@ -7,9 +7,9 @@ Usa SQLAlchemy para manejar todas las tablas
 import sqlite3
 from datetime import datetime, date
 from typing import Dict, List, Optional, Any
-from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, Boolean, Text
+from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, Boolean, Text, Index, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import sessionmaker, Session, relationship
 from sqlalchemy.exc import SQLAlchemyError
 import pandas as pd
 import numpy as np
@@ -56,40 +56,52 @@ class Gasto(Base):
     __tablename__ = 'gastos'
     
     id = Column(Integer, primary_key=True)
-    fecha = Column(DateTime, nullable=False)
-    cuenta_id = Column(Integer, nullable=False)
+    fecha = Column(DateTime, nullable=False, index=True)  # Índice para consultas por fecha
+    cuenta_id = Column(Integer, ForeignKey('cuentas.id'), nullable=False, index=True)  # Índice para consultas por cuenta
     descripcion = Column(String(200), nullable=False)
-    categoria_id = Column(Integer, nullable=True)
+    categoria_id = Column(Integer, ForeignKey('categorias.id'), nullable=True)
     tipo = Column(String(20), default='Variable')  # Fijo, Variable, Otro
-    etiqueta_id = Column(Integer, nullable=True)
+    etiqueta_id = Column(Integer, ForeignKey('etiquetas.id'), nullable=True)
     importe = Column(Float, nullable=False)
     recurrente_id = Column(String(50), nullable=True)
     fecha_creacion = Column(DateTime, default=datetime.now)
     fecha_modificacion = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+    
+    # Relaciones para facilitar joins
+    cuenta = relationship("Cuenta", backref="gastos")
+    categoria = relationship("Categoria", backref="gastos")
+    etiqueta = relationship("Etiqueta", backref="gastos")
 
 class Ingreso(Base):
     __tablename__ = 'ingresos'
     
     id = Column(Integer, primary_key=True)
-    fecha = Column(DateTime, nullable=False)
-    cuenta_id = Column(Integer, nullable=False)
+    fecha = Column(DateTime, nullable=False, index=True)  # Índice para consultas por fecha
+    cuenta_id = Column(Integer, ForeignKey('cuentas.id'), nullable=False, index=True)  # Índice para consultas por cuenta
     descripcion = Column(String(200), nullable=False)
     fuente = Column(String(100), nullable=False)
     bruto = Column(Float, nullable=False)
     neto = Column(Float, nullable=False)
     fecha_creacion = Column(DateTime, default=datetime.now)
     fecha_modificacion = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+    
+    # Relaciones para facilitar joins
+    cuenta = relationship("Cuenta", backref="ingresos")
 
 class Transferencia(Base):
     __tablename__ = 'transferencias'
     
     id = Column(Integer, primary_key=True)
-    fecha = Column(DateTime, nullable=False)
-    cuenta_origen_id = Column(Integer, nullable=False)
-    cuenta_destino_id = Column(Integer, nullable=False)
+    fecha = Column(DateTime, nullable=False, index=True)
+    cuenta_origen_id = Column(Integer, ForeignKey('cuentas.id'), nullable=False)
+    cuenta_destino_id = Column(Integer, ForeignKey('cuentas.id'), nullable=False)
     importe = Column(Float, nullable=False)
     descripcion = Column(String(200), nullable=True)
     fecha_creacion = Column(DateTime, default=datetime.now)
+    
+    # Relaciones
+    cuenta_origen = relationship("Cuenta", foreign_keys=[cuenta_origen_id], backref="transferencias_origen")
+    cuenta_destino = relationship("Cuenta", foreign_keys=[cuenta_destino_id], backref="transferencias_destino")
 
 class Recurrente(Base):
     __tablename__ = 'recurrentes'
@@ -99,25 +111,33 @@ class Recurrente(Base):
     importe = Column(Float, nullable=False)
     periodicidad = Column(String(20), default='Mensual')  # Mensual, Semanal, etc.
     dia_mes = Column(Integer, default=1)
-    cuenta_id = Column(Integer, nullable=True)
-    categoria_id = Column(Integer, nullable=True)
+    cuenta_id = Column(Integer, ForeignKey('cuentas.id'), nullable=True)
+    categoria_id = Column(Integer, ForeignKey('categorias.id'), nullable=True)
     activo = Column(Boolean, default=True)
     fecha_creacion = Column(DateTime, default=datetime.now)
+    
+    # Relaciones
+    cuenta = relationship("Cuenta", backref="recurrentes")
+    categoria = relationship("Categoria", backref="recurrentes")
 
 class Inversion(Base):
     __tablename__ = 'inversiones'
     
     id = Column(Integer, primary_key=True)
-    fecha = Column(DateTime, nullable=False)
+    fecha = Column(DateTime, nullable=False, index=True)
     operacion = Column(String(20), nullable=False)  # Compra, Venta
     ticker = Column(String(20), nullable=False)
     tipo = Column(String(20), nullable=False)  # Accion, ETF, Cripto, etc.
     cantidad = Column(Float, nullable=False)
     precio = Column(Float, nullable=False)
     comisiones = Column(Float, default=0.0)
-    cuenta_id = Column(Integer, nullable=True)
-    etiqueta_id = Column(Integer, nullable=True)
+    cuenta_id = Column(Integer, ForeignKey('cuentas.id'), nullable=True)
+    etiqueta_id = Column(Integer, ForeignKey('etiquetas.id'), nullable=True)
     fecha_creacion = Column(DateTime, default=datetime.now)
+    
+    # Relaciones
+    cuenta = relationship("Cuenta", backref="inversiones")
+    etiqueta = relationship("Etiqueta", backref="inversiones")
 
 class Precio(Base):
     __tablename__ = 'precios'
@@ -126,6 +146,41 @@ class Precio(Base):
     ticker = Column(String(20), unique=True, nullable=False)
     precio_actual = Column(Float, nullable=False)
     fecha_actualizacion = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+
+# Nuevo modelo para objetivos y metas
+class Objetivo(Base):
+    __tablename__ = 'objetivos'
+    
+    id = Column(Integer, primary_key=True)
+    nombre = Column(String(100), nullable=False)
+    tipo = Column(String(20), nullable=False)  # 'categoria', 'etiqueta', 'general'
+    objetivo_id = Column(Integer, nullable=True)  # ID de categoria/etiqueta si aplica
+    importe_objetivo = Column(Float, nullable=False)
+    periodo = Column(String(20), default='Mensual')  # Mensual, Anual
+    activo = Column(Boolean, default=True)
+    fecha_creacion = Column(DateTime, default=datetime.now)
+    fecha_modificacion = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+
+# Nuevo modelo para presupuesto por sobres
+class Sobre(Base):
+    __tablename__ = 'sobres'
+    
+    id = Column(Integer, primary_key=True)
+    nombre = Column(String(100), nullable=False)
+    descripcion = Column(String(200), nullable=True)
+    importe_objetivo = Column(Float, nullable=False)
+    importe_actual = Column(Float, default=0.0)
+    permite_rollover = Column(Boolean, default=True)  # Si permite arrastrar saldo
+    cuenta_id = Column(Integer, ForeignKey('cuentas.id'), nullable=True)  # Cuenta asociada
+    activo = Column(Boolean, default=True)
+    fecha_creacion = Column(DateTime, default=datetime.now)
+    fecha_modificacion = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+
+# Índices compuestos para mejor rendimiento
+Index('idx_gastos_fecha_cuenta', Gasto.fecha, Gasto.cuenta_id)
+Index('idx_gastos_categoria_fecha', Gasto.categoria_id, Gasto.fecha)
+Index('idx_ingresos_fecha_cuenta', Ingreso.fecha, Ingreso.cuenta_id)
+Index('idx_transferencias_fecha', Transferencia.fecha)
 
 # ----------------------------- Clase de Gestión de Base de Datos -----------------------------
 
@@ -155,6 +210,11 @@ class DatabaseManager:
                 {"clave": "% Variables (deseos)", "valor": "0.25", "tipo": "float"},
                 {"clave": "Mes objetivo", "valor": datetime.now().strftime("%Y-%m-%d"), "tipo": "date"},
                 {"clave": "Fuentes de ingreso", "valor": "Nomina", "tipo": "list"},
+                {"clave": "Validar presupuesto 100%", "valor": "true", "tipo": "string"},
+                {"clave": "Auto-corregir presupuesto", "valor": "false", "tipo": "string"},
+                {"clave": "Ahorro automático mensual", "valor": "500.0", "tipo": "float"},
+                {"clave": "Objetivo gastos fijos", "valor": "0.0", "tipo": "float"},
+                {"clave": "Objetivo gastos variables", "valor": "0.0", "tipo": "float"},
             ]
             
             for config in configs:
@@ -183,6 +243,31 @@ class DatabaseManager:
                 if not existing:
                     new_etq = Etiqueta(nombre=etq)
                     session.add(new_etq)
+            
+            # Objetivos básicos
+            objetivos_basicos = [
+                {"nombre": "Ahorro General", "tipo": "general", "importe_objetivo": 1000.0},
+                {"nombre": "Emergencias", "tipo": "general", "importe_objetivo": 500.0},
+            ]
+            
+            for obj in objetivos_basicos:
+                existing = session.query(Objetivo).filter_by(nombre=obj["nombre"]).first()
+                if not existing:
+                    new_obj = Objetivo(**obj)
+                    session.add(new_obj)
+            
+            # Sobres básicos
+            sobres_basicos = [
+                {"nombre": "Vacaciones", "descripcion": "Ahorro para viajes", "importe_objetivo": 200.0},
+                {"nombre": "Regalos", "descripcion": "Presupuesto para regalos", "importe_objetivo": 100.0},
+                {"nombre": "Mantenimiento", "descripcion": "Reparaciones del hogar", "importe_objetivo": 150.0},
+            ]
+            
+            for sobre in sobres_basicos:
+                existing = session.query(Sobre).filter_by(nombre=sobre["nombre"]).first()
+                if not existing:
+                    new_sobre = Sobre(**sobre)
+                    session.add(new_sobre)
             
             session.commit()
             

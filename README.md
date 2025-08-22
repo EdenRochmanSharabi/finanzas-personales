@@ -5,13 +5,20 @@ Una aplicación completa de gestión de finanzas personales desarrollada con Str
 ## 🚀 Características Principales
 
 - **Gestión completa de finanzas**: Gastos, ingresos, transferencias, inversiones
-- **Base de datos SQLite**: Almacenamiento robusto y eficiente
+- **Base de datos SQLite**: Almacenamiento robusto y eficiente con índices optimizados
 - **Migración desde Excel**: Importa datos desde archivos Excel existentes
 - **Análisis en tiempo real**: KPIs, gráficos y métricas financieras
 - **Presupuesto inteligente**: Sistema 50/30/20 con seguimiento automático
 - **Categorización**: Organiza transacciones con categorías y etiquetas
 - **Interfaz moderna**: Diseño limpio y responsive con Streamlit
 - **Autenticación segura**: Sistema de login con contraseñas hasheadas
+- **Objetivos y metas**: Establece y sigue objetivos de ahorro
+- **Presupuesto por sobres**: Sistema de sinking funds con rollover
+- **Análisis temporal**: Gráficos de tendencia con ejes fijos
+- **Exportación de datos**: Exporta a CSV y Excel con filtros aplicados
+- **Sistema de deshacer**: Deshace acciones recientes
+- **Validación de presupuesto**: Asegura que los porcentajes sumen 100%
+- **Importación inteligente**: Clasificación automática de gastos bancarios
 
 ## 📋 Requisitos
 
@@ -71,6 +78,14 @@ Usa el script incluido para generar contraseñas hasheadas:
 python generate_password.py
 ```
 
+### Migración de base de datos
+
+Si ya tienes una base de datos existente, ejecuta la migración para obtener las nuevas funcionalidades:
+
+```bash
+python migrate.py
+```
+
 ## 🚀 Deploy en Streamlit Community Cloud
 
 1. **Sube tu código a GitHub** (asegúrate de que `config.yaml` esté en `.gitignore`)
@@ -102,7 +117,7 @@ STREAMLIT_SERVER_ADDRESS=0.0.0.0
 finanzas-personales/
 ├── app.py                 # Aplicación principal
 ├── database.py            # Modelos y gestión de BD
-├── migrate.py             # Migración desde Excel
+├── migrate.py             # Migración de BD y Excel
 ├── generate_password.py   # Generador de contraseñas
 ├── security_check.py      # Verificación de seguridad
 ├── requirements.txt       # Dependencias
@@ -118,25 +133,45 @@ finanzas-personales/
 - La base de datos local no se sube a GitHub
 - El archivo `config.yaml` está excluido del control de versiones
 - Todas las transacciones financieras se mantienen privadas
+- Sistema de rate limiting para intentos de login
+- Bloqueo exponencial tras múltiples intentos fallidos
 
 ## 📊 Funcionalidades
 
 ### Gestión de Transacciones
 - **Gastos**: Registro con categorías, etiquetas y tipos
 - **Ingresos**: Seguimiento de fuentes de ingresos
-- **Transferencias**: Movimientos entre cuentas
+- **Transferencias**: Movimientos entre cuentas con ajuste automático de saldos
 - **Inversiones**: Seguimiento de cartera de inversión
 
 ### Análisis y Reportes
 - **KPIs en tiempo real**: Ahorro, gastos, ingresos netos
 - **Gráficos interactivos**: Evolución temporal, distribución
 - **Presupuesto 50/30/20**: Seguimiento automático de objetivos
-- **Exportación**: Datos en Excel y CSV
+- **Análisis temporal**: Gráficos de tendencia con ejes fijos
+- **Exportación**: Datos en Excel y CSV con filtros aplicados
+
+### Objetivos y Metas
+- **Objetivos de ahorro**: Metas por categoría, etiqueta o general
+- **Seguimiento de progreso**: Progreso visual de objetivos
+- **Notificaciones**: Alertas de desviación de objetivos
+
+### Presupuesto por Sobres
+- **Sinking funds**: Presupuesto por categorías específicas
+- **Rollover**: Arrastre de saldo entre meses
+- **Visualización**: Gráficos de progreso por sobre
 
 ### Gestión de Datos
 - **Migración desde Excel**: Importa datos existentes
 - **Backup automático**: Respaldos de la base de datos
 - **Categorización**: Sistema flexible de categorías y etiquetas
+- **Importación inteligente**: Clasificación automática de CSV bancarios
+
+### Funcionalidades Avanzadas
+- **Sistema de deshacer**: Deshace las últimas 10 acciones
+- **Validación de presupuesto**: Asegura porcentajes correctos
+- **Auto-corrección**: Corrige automáticamente porcentajes
+- **Optimización de rendimiento**: Índices de base de datos optimizados
 
 ## 🤝 Contribuir
 
@@ -165,7 +200,31 @@ Para mantener tu aplicación actualizada:
 ```bash
 git pull origin main
 pip install -r requirements.txt --upgrade
+python migrate.py  # Si hay nuevas migraciones
 ```
+
+## 🆕 Nuevas Funcionalidades (v2.0)
+
+### Optimizaciones de Rendimiento
+- **Índices de base de datos**: Consultas más rápidas
+- **Importación optimizada**: Evita duplicados O(n²) → O(1)
+- **Caché de datos**: Mejor rendimiento en consultas repetidas
+
+### Nuevas Pestañas
+- **🔄 Transferencias**: Gestión de movimientos entre cuentas
+- **🎯 Objetivos**: Metas de ahorro y seguimiento
+- **📁 Sobres**: Presupuesto por categorías específicas
+
+### Mejoras en la Interfaz
+- **Análisis temporal**: Gráficos de tendencia con ejes fijos
+- **Exportación mejorada**: CSV y Excel con filtros
+- **Validación de presupuesto**: Asegura porcentajes correctos
+- **Sistema de deshacer**: Deshace acciones recientes
+
+### Funcionalidades de Datos
+- **Relaciones de BD**: Foreign keys y constraints
+- **Migración automática**: Actualiza BD existentes
+- **Backup automático**: Antes de migraciones
 
 ---
 

@@ -67,3 +67,11 @@ finanzas.db
 # Environment variables
 .env
 .env.local
+
+# Export files
+exports/
+*.csv
+*.xlsx
+
+# Backup files
+*_backup.db
