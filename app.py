@@ -992,12 +992,12 @@ def render_dashboard(app: FinanzasApp, sel_month: date):
                 })
                 
                 import altair as alt
-                chart = alt.Chart(chart_data).mark_bar().encode(
+                chart = alt.Chart(chart_data).mark_bar(cornerRadiusTopLeft=4, cornerRadiusTopRight=4).encode(
                     x=alt.X('Cuenta:N', title='Cuenta'),
                     y=alt.Y('Saldo:Q', title='Saldo (€)', scale=alt.Scale(domain=[0, max_saldo * 1.1])),
-                    color=alt.value('#1f77b4')
+                    color=alt.value('#4C78A8')
                 ).properties(
-                    height=300,
+                    height=220,
                     width='container'
                 )
                 st.altair_chart(chart, use_container_width=True)
@@ -1036,12 +1036,12 @@ def render_dashboard(app: FinanzasApp, sel_month: date):
                 })
                 
                 import altair as alt
-                chart = alt.Chart(chart_data).mark_bar().encode(
+                chart = alt.Chart(chart_data).mark_bar(cornerRadiusTopLeft=4, cornerRadiusTopRight=4).encode(
                     x=alt.X('Categoría:N', title='Categoría'),
                     y=alt.Y('Importe:Q', title='Importe (€)', scale=alt.Scale(domain=[0, max_cat * 1.1])),
-                    color=alt.value('#ff7f0e')
+                    color=alt.value('#F58518')
                 ).properties(
-                    height=300,
+                    height=220,
                     width='container'
                 )
                 st.altair_chart(chart, use_container_width=True)
@@ -1057,12 +1057,12 @@ def render_dashboard(app: FinanzasApp, sel_month: date):
                 })
                 
                 import altair as alt
-                chart = alt.Chart(chart_data).mark_bar().encode(
+                chart = alt.Chart(chart_data).mark_bar(cornerRadiusTopLeft=4, cornerRadiusTopRight=4).encode(
                     x=alt.X('Etiqueta:N', title='Etiqueta'),
                     y=alt.Y('Importe:Q', title='Importe (€)', scale=alt.Scale(domain=[0, max_tag * 1.1])),
-                    color=alt.value('#2ca02c')
+                    color=alt.value('#54A24B')
                 ).properties(
-                    height=300,
+                    height=220,
                     width='container'
                 )
                 st.altair_chart(chart, use_container_width=True)
@@ -1570,12 +1570,12 @@ def render_cuentas_tab(app: FinanzasApp):
             })
             
             import altair as alt
-            chart = alt.Chart(chart_data).mark_bar().encode(
+            chart = alt.Chart(chart_data).mark_bar(cornerRadiusTopLeft=4, cornerRadiusTopRight=4).encode(
                 x=alt.X('Cuenta:N', title='Cuenta'),
                 y=alt.Y('Saldo:Q', title='Saldo (€)', scale=alt.Scale(domain=[0, max_saldo * 1.1])),
-                color=alt.value('#1f77b4')
+                color=alt.value('#4C78A8')
             ).properties(
-                height=400,
+                height=240,
                 width='container'
             )
             st.altair_chart(chart, use_container_width=True)
@@ -1613,7 +1613,7 @@ def render_cuentas_tab(app: FinanzasApp):
             st.subheader("Actualizar saldo de cuentas")
             
             for _, cuenta in cuentas_df.iterrows():
-                col1, col2, col3, col4 = st.columns([2, 1, 1, 1])
+                col1, col2, col3, col4 = st.columns([2, 2, 1, 1])
                 
                 with col1:
                     st.write(f"**{cuenta['nombre']}**")
@@ -1623,7 +1623,8 @@ def render_cuentas_tab(app: FinanzasApp):
                         "Nuevo saldo",
                         value=float(cuenta['saldo_inicial']),
                         step=0.01,
-                        key=f"saldo_{cuenta['id']}"
+                        key=f"saldo_{cuenta['id']}",
+                        label_visibility="collapsed",
                     )
                 
                 with col3:
@@ -1878,8 +1879,7 @@ def verify_password(stored_password: str, provided_password: str) -> bool:
 
 def show_login_page():
     """Mostrar página de login personalizada con rate limiting"""
-    st.title("🔐 Acceso a Finanzas Personales")
-    st.markdown("---")
+    # Encabezado compacto (evita ocupar toda la pantalla en móvil)
     
     # Verificar si ya está autenticado
     if 'authenticated' in st.session_state and st.session_state.authenticated:
@@ -2016,9 +2016,7 @@ def main():
     if not auth_success:
         st.stop()
     
-    # Título principal
-    st.title("💶 Finanzas Personales")
-    st.markdown("---")
+    # Evitar título grande en móvil; ir directo al contenido
     
     # Botón de logout en sidebar
     with st.sidebar:
