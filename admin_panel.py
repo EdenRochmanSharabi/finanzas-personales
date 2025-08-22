@@ -19,9 +19,10 @@ def load_user_credentials():
             if hasattr(st, 'secrets') and st.secrets and len(st.secrets) > 0:
                 secrets_creds = st.secrets.get('credentials', {}).get('usernames', {})
                 if secrets_creds:
+                    st.success("✅ Credenciales cargadas desde Streamlit Secrets")
                     return secrets_creds
-        except Exception:
-            pass
+        except Exception as e:
+            st.info(f"ℹ️ No se encontraron credenciales en Streamlit Secrets: {e}")
         
         # Intentar cargar desde archivo local
         possible_paths = [
@@ -37,15 +38,21 @@ def load_user_credentials():
                         config = yaml.load(file, Loader=yaml.SafeLoader)
                         local_creds = config.get('credentials', {}).get('usernames', {})
                         if local_creds:
+                            st.success(f"✅ Credenciales cargadas desde {config_path}")
                             return local_creds
+                        else:
+                            st.warning(f"⚠️ Archivo {config_path} existe pero no contiene credenciales válidas")
                 except Exception as e:
-                    print(f"Error leyendo {config_path}: {e}")
+                    st.error(f"❌ Error leyendo {config_path}: {e}")
                     continue
+            else:
+                st.info(f"ℹ️ Archivo no encontrado: {config_path}")
         
+        st.error("❌ No se encontraron credenciales en ninguna ubicación")
         return {}
         
     except Exception as e:
-        st.error(f"Error al cargar credenciales: {e}")
+        st.error(f"❌ Error al cargar credenciales: {e}")
         return {}
 
 def get_login_telemetry():
@@ -149,7 +156,11 @@ def main():
     # Verificar si el usuario es administrador
     users = load_user_credentials()
     if not users:
-        st.error("❌ No se encontraron credenciales configuradas")
+        st.warning("⚠️ No se encontraron credenciales configuradas")
+        st.info("💡 Para usar el panel de administración:")
+        st.write("1. Asegúrate de tener config.yaml configurado")
+        st.write("2. O ejecuta: `python generate_streamlit_secrets.py`")
+        st.write("3. O configura las credenciales en Streamlit Cloud")
         st.stop()
     
     # Mostrar información de usuarios registrados
