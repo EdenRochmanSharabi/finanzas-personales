@@ -982,7 +982,14 @@ def render_dashboard(app: FinanzasApp, sel_month: date):
             st.dataframe(display_df, use_container_width=True, hide_index=True)
         
         with col2:
-            # Gráfico de distribución de saldos con ejes fijos
+            # Selector de tipo de gráfico para cuentas
+            chart_type_cuentas = st.selectbox(
+                "📊 Tipo de gráfico",
+                ["Barras", "Circular"],
+                key="chart_type_cuentas"
+            )
+            
+            # Gráfico de distribución de saldos
             if not cuentas_df.empty:
                 saldos_chart = cuentas_df.set_index('nombre')['saldo_inicial']
                 max_saldo = saldos_chart.max() if not saldos_chart.empty else 1000
@@ -992,14 +999,26 @@ def render_dashboard(app: FinanzasApp, sel_month: date):
                 })
                 
                 import altair as alt
-                chart = alt.Chart(chart_data).mark_bar(cornerRadiusTopLeft=4, cornerRadiusTopRight=4).encode(
-                    x=alt.X('Cuenta:N', title='Cuenta'),
-                    y=alt.Y('Saldo:Q', title='Saldo (€)', scale=alt.Scale(domain=[0, max_saldo * 1.1])),
-                    color=alt.value('#4C78A8')
-                ).properties(
-                    height=220,
-                    width='container'
-                )
+                
+                if chart_type_cuentas == "Barras":
+                    chart = alt.Chart(chart_data).mark_bar(cornerRadiusTopLeft=4, cornerRadiusTopRight=4).encode(
+                        x=alt.X('Cuenta:N', title='Cuenta'),
+                        y=alt.Y('Saldo:Q', title='Saldo (€)', scale=alt.Scale(domain=[0, max_saldo * 1.1])),
+                        color=alt.value('#A8D5BA')
+                    ).properties(
+                        height=220,
+                        width='container'
+                    )
+                else:  # Circular
+                    chart = alt.Chart(chart_data).mark_arc().encode(
+                        theta=alt.Theta('Saldo:Q', type='quantitative'),
+                        color=alt.Color('Cuenta:N', scale=alt.Scale(scheme='pastel1')),
+                        tooltip=['Cuenta', alt.Tooltip('Saldo:Q', format='.2f', title='Saldo (€)')]
+                    ).properties(
+                        height=220,
+                        width='container'
+                    )
+                
                 st.altair_chart(chart, use_container_width=True)
     
     # Presupuesto por bloques
@@ -1027,6 +1046,14 @@ def render_dashboard(app: FinanzasApp, sel_month: date):
         
         with col1:
             st.subheader("📊 Gastos por categoría")
+            
+            # Selector de tipo de gráfico para categorías
+            chart_type_cat = st.selectbox(
+                "📊 Tipo de gráfico",
+                ["Barras", "Circular"],
+                key="chart_type_categorias"
+            )
+            
             cat_gastos = gastos_df.groupby('Categoria')['importe'].sum().sort_values(ascending=False)
             if not cat_gastos.empty:
                 max_cat = cat_gastos.max()
@@ -1036,18 +1063,38 @@ def render_dashboard(app: FinanzasApp, sel_month: date):
                 })
                 
                 import altair as alt
-                chart = alt.Chart(chart_data).mark_bar(cornerRadiusTopLeft=4, cornerRadiusTopRight=4).encode(
-                    x=alt.X('Categoría:N', title='Categoría'),
-                    y=alt.Y('Importe:Q', title='Importe (€)', scale=alt.Scale(domain=[0, max_cat * 1.1])),
-                    color=alt.value('#F58518')
-                ).properties(
-                    height=220,
-                    width='container'
-                )
+                
+                if chart_type_cat == "Barras":
+                    chart = alt.Chart(chart_data).mark_bar(cornerRadiusTopLeft=4, cornerRadiusTopRight=4).encode(
+                        x=alt.X('Categoría:N', title='Categoría'),
+                        y=alt.Y('Importe:Q', title='Importe (€)', scale=alt.Scale(domain=[0, max_cat * 1.1])),
+                        color=alt.value('#F7CAC9')
+                    ).properties(
+                        height=220,
+                        width='container'
+                    )
+                else:  # Circular
+                    chart = alt.Chart(chart_data).mark_arc().encode(
+                        theta=alt.Theta('Importe:Q', type='quantitative'),
+                        color=alt.Color('Categoría:N', scale=alt.Scale(scheme='pastel2')),
+                        tooltip=['Categoría', alt.Tooltip('Importe:Q', format='.2f', title='Importe (€)')]
+                    ).properties(
+                        height=220,
+                        width='container'
+                    )
+                
                 st.altair_chart(chart, use_container_width=True)
         
         with col2:
             st.subheader("🏷️ Gastos por etiqueta")
+            
+            # Selector de tipo de gráfico para etiquetas
+            chart_type_tag = st.selectbox(
+                "📊 Tipo de gráfico",
+                ["Barras", "Circular"],
+                key="chart_type_etiquetas"
+            )
+            
             tag_gastos = gastos_df.groupby('Etiqueta')['importe'].sum().sort_values(ascending=False)
             if not tag_gastos.empty:
                 max_tag = tag_gastos.max()
@@ -1057,14 +1104,26 @@ def render_dashboard(app: FinanzasApp, sel_month: date):
                 })
                 
                 import altair as alt
-                chart = alt.Chart(chart_data).mark_bar(cornerRadiusTopLeft=4, cornerRadiusTopRight=4).encode(
-                    x=alt.X('Etiqueta:N', title='Etiqueta'),
-                    y=alt.Y('Importe:Q', title='Importe (€)', scale=alt.Scale(domain=[0, max_tag * 1.1])),
-                    color=alt.value('#54A24B')
-                ).properties(
-                    height=220,
-                    width='container'
-                )
+                
+                if chart_type_tag == "Barras":
+                    chart = alt.Chart(chart_data).mark_bar(cornerRadiusTopLeft=4, cornerRadiusTopRight=4).encode(
+                        x=alt.X('Etiqueta:N', title='Etiqueta'),
+                        y=alt.Y('Importe:Q', title='Importe (€)', scale=alt.Scale(domain=[0, max_tag * 1.1])),
+                        color=alt.value('#B8E6B8')
+                    ).properties(
+                        height=220,
+                        width='container'
+                    )
+                else:  # Circular
+                    chart = alt.Chart(chart_data).mark_arc().encode(
+                        theta=alt.Theta('Importe:Q', type='quantitative'),
+                        color=alt.Color('Etiqueta:N', scale=alt.Scale(scheme='pastel1')),
+                        tooltip=['Etiqueta', alt.Tooltip('Importe:Q', format='.2f', title='Importe (€)')]
+                    ).properties(
+                        height=220,
+                        width='container'
+                    )
+                
                 st.altair_chart(chart, use_container_width=True)
     else:
         st.info("📝 No hay gastos registrados para este mes")
@@ -1561,6 +1620,14 @@ def render_cuentas_tab(app: FinanzasApp):
         
         # Gráfico de saldos con ejes fijos
         st.subheader("📊 Distribución de saldos")
+        
+        # Selector de tipo de gráfico para cuentas
+        chart_type_cuentas_tab = st.selectbox(
+            "📊 Tipo de gráfico",
+            ["Barras", "Circular"],
+            key="chart_type_cuentas_tab"
+        )
+        
         if not cuentas_df.empty:
             saldos_chart = cuentas_df.set_index('nombre')['saldo_inicial']
             max_saldo = saldos_chart.max()
@@ -1570,14 +1637,26 @@ def render_cuentas_tab(app: FinanzasApp):
             })
             
             import altair as alt
-            chart = alt.Chart(chart_data).mark_bar(cornerRadiusTopLeft=4, cornerRadiusTopRight=4).encode(
-                x=alt.X('Cuenta:N', title='Cuenta'),
-                y=alt.Y('Saldo:Q', title='Saldo (€)', scale=alt.Scale(domain=[0, max_saldo * 1.1])),
-                color=alt.value('#4C78A8')
-            ).properties(
-                height=240,
-                width='container'
-            )
+            
+            if chart_type_cuentas_tab == "Barras":
+                chart = alt.Chart(chart_data).mark_bar(cornerRadiusTopLeft=4, cornerRadiusTopRight=4).encode(
+                    x=alt.X('Cuenta:N', title='Cuenta'),
+                    y=alt.Y('Saldo:Q', title='Saldo (€)', scale=alt.Scale(domain=[0, max_saldo * 1.1])),
+                    color=alt.value('#A8D5BA')
+                ).properties(
+                    height=240,
+                    width='container'
+                )
+            else:  # Circular
+                chart = alt.Chart(chart_data).mark_arc().encode(
+                    theta=alt.Theta('Saldo:Q', type='quantitative'),
+                    color=alt.Color('Cuenta:N', scale=alt.Scale(scheme='pastel1')),
+                    tooltip=['Cuenta', alt.Tooltip('Saldo:Q', format='.2f', title='Saldo (€)')]
+                ).properties(
+                    height=240,
+                    width='container'
+                )
+            
             st.altair_chart(chart, use_container_width=True)
         
     else:
